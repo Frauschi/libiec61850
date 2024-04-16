@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5.1)
+cmake_minimum_required(VERSION 3.15)
 
 # automagically detect if we should cross-compile
 if(DEFINED ENV{TOOLCHAIN})
@@ -43,6 +43,12 @@ option(CONFIG_USE_EXTERNAL_MBEDTLS_DYNLIB "Build with pre-compiled mbedtls dynam
 
 set(CONFIG_EXTERNAL_MBEDTLS_DYNLIB_PATH "${CMAKE_CURRENT_LIST_DIR}/third_party/mbedtls/mbedtls-2.28/library" CACHE STRING "Path to search for the mbedtls dynamic libraries" )
 set(CONFIG_EXTERNAL_MBEDTLS_INCLUDE_PATH "${CMAKE_CURRENT_LIST_DIR}/third_party/mbedtls/mbedtls-2.28/include" CACHE STRING "Path to search for the mbedtls include files" )
+
+option(CONFIG_USE_EXTERNAL_WOLFSSL_DYNLIB "Build with pre-compiled WolfSSL dynamic library" OFF)
+
+option(CONFIG_EXTERNAL_WOLFSSL_DYNLIB_PATH "Path to search for the WolfSSL dynamic libraries" "${CMAKE_CURRENT_LIST_DIR}/third_party/wolfssl/wolfssl/build")
+option(CONFIG_EXTERNAL_WOLFSSL_INCLUDE_PATHS "Path to search for the WolfSSL include files" "${CMAKE_CURRENT_LIST_DIR}/third_party/wolfssl/wolfssl/wolfssl")
+
 
 # choose the library features which shall be included
 option(CONFIG_IEC61850_CONTROL_SERVICE "Build with support for IEC 61850 control features" ON)
@@ -135,11 +141,22 @@ set(WITH_MBEDTLS 1)
 set(MBEDTLS_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/third_party/mbedtls/mbedtls-2.28/include")
 endif(EXISTS ${CMAKE_CURRENT_LIST_DIR}/third_party/mbedtls/mbedtls-2.28)
 
-if(WITH_MBEDTLS)
+if(CONFIG_USE_EXTERNAL_WOLFSSL_DYNLIB)
+set(WITH_WOLFSSL 1)
+set(USE_PREBUILD_WOLFSSL 1)
+set(WOLFSSL_INCLUDE_DIR ${CONFIG_EXTERNAL_WOLFSSL_INCLUDE_PATH})
+endif(CONFIG_USE_EXTERNAL_WOLFSSL_DYNLIB)
+
+if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/third_party/wolfssl/wolfssl)
+set(WITH_WOLFSSL 1)
+set(WOLFSSL_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/third_party/wolfssl/wolfssl/wolfssl")
+endif(EXISTS ${CMAKE_CURRENT_LIST_DIR}/third_party/wolfssl/wolfssl)
+
+if(WITH_MBEDTLS OR WITH_WOLFSSL)
 
 add_definitions(-DCONFIG_MMS_SUPPORT_TLS=1)
 
-endif(WITH_MBEDTLS)
+endif(WITH_MBEDTLS OR WITH_WOLFSSL)
 
 include(CheckCCompilerFlag)
 

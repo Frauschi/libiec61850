@@ -120,6 +120,15 @@ message("Found mbedtls -> can compile HAL with TLS support")
 set(WITH_MBEDTLS 1)
 endif(WITH_MBEDTLS)
 
+if(WITH_WOLFSSL)
+message("Found WolfSSL -> can compile HAL with TLS support")
+set(WITH_WOLFSSL 1)
+endif(WITH_WOLFSSL)
+
+if(WITH_MBEDTLS AND WITH_WOLFSSL)
+message(FATAL_ERROR "Cannot compile with both mbedtls and wolfssl")
+endif(WITH_MBEDTLS AND WITH_WOLFSSL)
+
 if(WITH_MBEDTLS)
 include_directories(
 	${CMAKE_CURRENT_LIST_DIR}/tls/mbedtls
@@ -147,6 +156,34 @@ list (APPEND libhal_SRCS ${tls_SRCS})
 
 endif(WITH_MBEDTLS)
 
+
+if(WITH_WOLFSSL)
+
+include_directories(
+	${CMAKE_CURRENT_LIST_DIR}/tls/wolfssl
+    ${WOLFSSL_INCLUDE_DIR}
+)
+
+message(STATUS "WOLFSSL_INCLUDE_DIR: ${WOLFSSL_INCLUDE_DIR}")
+
+if(CONFIG_USE_EXTERNAL_WOLFSSL_DYNLIB)
+link_directories(${CONFIG_EXTERNAL_WOLFSSL_DYNLIB_PATH})
+message(STATUS "CONFIG_EXTERNAL_WOLFSSL_DYNLIB_PATH: ${CONFIG_EXTERNAL_WOLFSSL_DYNLIB_PATH}")
+else()
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../third_party/wolfssl/wolfssl)
+endif(CONFIG_USE_EXTERNAL_WOLFSSL_DYNLIB)
+
+set (libhal_SRCS ${libhal_SRCS}
+  ${CMAKE_CURRENT_LIST_DIR}/tls/wolfssl/tls_wolfssl.c
+)
+
+IF(MSVC)
+set_source_files_properties(${libhal_SRCS}
+                                       PROPERTIES LANGUAGE CXX)
+ENDIF()
+
+endif(WITH_WOLFSSL)
+
 add_library (hal STATIC ${libhal_SRCS})
 
 add_library (hal-shared STATIC ${libhal_SRCS})
@@ -173,6 +210,10 @@ ENDIF(UNIX)
 IF(CONFIG_USE_EXTERNAL_MBEDTLS_DYNLIB)
   target_link_libraries(hal mbedcrypto mbedx509 mbedtls)
 ENDIF(CONFIG_USE_EXTERNAL_MBEDTLS_DYNLIB)
+
+IF(CONFIG_USE_EXTERNAL_WOLFSSL_DYNLIB)
+  target_link_libraries(hal wolfssl)
+ENDIF(CONFIG_USE_EXTERNAL_WOLFSSL_DYNLIB)
 
 IF(MINGW)
   target_link_libraries(hal ws2_32 iphlpapi)
