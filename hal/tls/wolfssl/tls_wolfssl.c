@@ -115,7 +115,7 @@ static int errorOccured(int32_t ret)
 	{
 		char errMsg[WOLFSSL_MAX_ERROR_SZ];
 		wolfSSL_ERR_error_string_n(ret, errMsg, sizeof(errMsg));
-		DEBUG_PRINT("error: %s", errMsg);
+		DEBUG_PRINT("TLS", "error: %s\n", errMsg);
 
 		return -1;
 	}
@@ -145,6 +145,13 @@ static int wolfssl_write_callback(WOLFSSL* wolfssl, char* buffer, int size, void
         }
 
         return ret;
+}
+
+static void wolfssl_logging_callback(int level, const char* str)
+{
+	(void) level;
+
+	DEBUG_PRINT("TLS", "%s\n", str);
 }
 
 
@@ -185,6 +192,9 @@ TLSConfiguration_create(void)
                 self->useSessionResumption = true;
                 self->sessionResumptionInterval = 21600; /* default value: 6h */
                 self->savedSessionTime = 0;
+
+                // wolfSSL_SetLoggingCb(wolfssl_logging_callback);
+    		// wolfSSL_Debugging_ON();
         }
 
         return self;
@@ -562,7 +572,7 @@ TLSSocket_create(Socket socket, TLSConfiguration configuration, bool storeClient
                 if (TLSConfiguration_setupComplete(configuration) == false)
                 {
                         GLOBAL_FREEMEM(self);
-                        DEBUG_PRINT("Error setting up TLS configuration\n");
+                        DEBUG_PRINT("TLS", "Error setting up TLS configuration\n");
                         return NULL;
                 }
 
@@ -570,7 +580,7 @@ TLSSocket_create(Socket socket, TLSConfiguration configuration, bool storeClient
                 if (self->session == NULL)
                 {
                         GLOBAL_FREEMEM(self);
-                        DEBUG_PRINT("Error creating TLS session\n");
+                        DEBUG_PRINT("TLS", "Error creating TLS session\n");
                         return NULL;
                 }
 
@@ -675,18 +685,19 @@ int
 TLSSocket_write(TLSSocket self, uint8_t* buf, int size)
 {
         uint8_t const* tmp = buf;
+        int bytes_remaining = size;
 	int ret = 0;
 
-	while (size > 0)
+	while (bytes_remaining > 0)
 	{
-		ret = wolfSSL_write(self->session, tmp, size);
+		ret = wolfSSL_write(self->session, tmp, bytes_remaining);
 
 		if (ret > 0)
 		{
 			/* We successfully sent data */
-			size -= ret;
+			bytes_remaining -= ret;
 			tmp += ret;
-			ret = 0;
+			ret = size;
 		}
 		else
 		{
@@ -702,7 +713,7 @@ TLSSocket_write(TLSSocket self, uint8_t* buf, int size)
 			else if (ret == WOLFSSL_ERROR_WANT_WRITE)
 			{
 				/* We have more to write. */
-				break;
+				continue;
 			}
 			else if (ret == WOLFSSL_ERROR_SYSCALL)
 			{
