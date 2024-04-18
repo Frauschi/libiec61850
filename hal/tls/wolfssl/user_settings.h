@@ -51,11 +51,11 @@ extern "C" {
 #define HAVE_SECRET_CALLBACK
 
 #define HAVE_WOLF_BIGINT
-#define HAVE_PKCS11
-#define NO_PKCS11_ECDH
+// #define HAVE_PKCS11
+// #define NO_PKCS11_ECDH
 
-#define HAVE_LIBOQS
-#define WOLFSSL_DUAL_ALG_CERTS
+// #define HAVE_LIBOQS
+// #define WOLFSSL_DUAL_ALG_CERTS
 #define WOLFSSL_ASN_TEMPLATE
 
 #define LARGE_STATIC_BUFFERS

@@ -300,8 +300,6 @@ TLSConfiguration_setupComplete(TLSConfiguration self)
                 /* Configure the available curves for Key Exchange */
                 int wolfssl_key_exchange_curves[] = {
                         WOLFSSL_ECC_SECP384R1,
-                        WOLFSSL_KYBER_LEVEL3,
-                        WOLFSSL_P384_KYBER_LEVEL3,
                 };
                 ret = wolfSSL_CTX_set_groups(self->context, wolfssl_key_exchange_curves,
                                         sizeof(wolfssl_key_exchange_curves) / sizeof(int));
