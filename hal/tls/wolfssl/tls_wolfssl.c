@@ -550,7 +550,17 @@ TLSConfiguration_resetCRL(TLSConfiguration self)
 void
 TLSConfiguration_destroy(TLSConfiguration self)
 {
-        // ToDo
+        if (self)
+        {
+                if (self->context)
+                {
+                        wolfSSL_CTX_free(self->context);
+                }
+
+                LinkedList_destroy(self->allowedCertificates);
+
+                GLOBAL_FREEMEM(self);
+        }
 }
 
 TLSSocket
