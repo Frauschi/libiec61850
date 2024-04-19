@@ -586,6 +586,9 @@ TLSSocket_create(Socket socket, TLSConfiguration configuration, bool storeClient
                 wolfSSL_SetIOReadCtx(self->session, socket);
 	        wolfSSL_SetIOWriteCtx(self->session, socket);
 
+                HandleSet handle_set = Handleset_new();
+                Handleset_addSocket(handle_set, socket);
+
                 while( (ret = wolfSSL_negotiate(self->session)) != WOLFSSL_SUCCESS )
                 {
                         ret = wolfSSL_get_error(self->session, ret);
@@ -598,7 +601,14 @@ TLSSocket_create(Socket socket, TLSConfiguration configuration, bool storeClient
 
                                 return NULL;
                         }
+                        else if (ret == WOLFSSL_ERROR_WANT_READ)
+                        {
+                                /* Wait for response from server */
+                                Handleset_waitReady(handle_set, 1000);
+                        }
                 }
+
+                Handleset_destroy(handle_set);
         }
 
         return self;

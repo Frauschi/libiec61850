@@ -285,6 +285,19 @@ MmsConnection_connectAsync(MmsConnection self, MmsError* mmsError, const char* s
 LIB61850_API bool
 MmsConnection_tick(MmsConnection self);
 
+/**
+ * \brief Wait for incoming data on the connection
+ *
+ * This function will block until data is received on the connection or the timeout expires.
+ *
+ * \param self MmsConnection instance to operate on
+ * \param timeoutInMs timeout in milliseconds
+ *
+ * \return true if data is available, false if the timeout expired
+ */
+LIB61850_API bool
+MmsConnection_waitForData(MmsConnection self, int timeoutInMs);
+
 /* NOTE: This function is for test purposes! */
 LIB61850_API void
 MmsConnection_sendRawData(MmsConnection self, MmsError* mmsError, uint8_t* buffer, int bufSize);

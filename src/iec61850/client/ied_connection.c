@@ -651,12 +651,18 @@ IedConnection_tick(IedConnection self)
     return MmsConnection_tick(self->connection);
 }
 
+bool
+IedConnection_waitForData(IedConnection self, int timeoutInMs)
+{
+    return MmsConnection_waitForData(self->connection, timeoutInMs);
+}
+
 void
-IedConnection_setLocalAddress(IedConnection self, const char* localIpAddress, int localPort) 
+IedConnection_setLocalAddress(IedConnection self, const char* localIpAddress, int localPort)
 {
     MmsConnection connection = self->connection;
     IsoConnectionParameters isoP = MmsConnection_getIsoConnectionParameters(connection);
-      
+
     IsoConnectionParameters_setLocalTcpParameters(isoP, localIpAddress, localPort);
 }
 

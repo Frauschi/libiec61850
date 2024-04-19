@@ -305,6 +305,15 @@ LIB61850_API bool
 IedConnection_tick(IedConnection self);
 
 /**
+ * \brief Wait for a new incoming message or event
+ *
+ * This function blocks until a new message or event is received or the timeout expires.
+ *
+*/
+LIB61850_API bool
+IedConnection_waitForData(IedConnection self, int timeoutInMs);
+
+/**
  * \brief Generic serivce callback handler
  *
  * NOTE: This callback handler is used by several asynchronous service functions that require

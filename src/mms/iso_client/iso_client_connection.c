@@ -81,6 +81,7 @@ struct sIsoClientConnection
     uint64_t nextReadTimeout; /* timeout value for read and connect */
 
     Socket socket;
+    HandleSet handleSet;
 
 #if (CONFIG_MMS_SUPPORT_TLS == 1)
     TLSSocket tlsSocket;
@@ -185,6 +186,8 @@ IsoClientConnection_create(IsoConnectionParameters parameters, IsoIndicationCall
         ByteBuffer_wrap(self->cotpWriteBuffer, self->cotpWriteBuf, 0, CONFIG_COTP_MAX_TPDU_SIZE + TPKT_RFC1006_HEADER_SIZE);
 
         self->cotpConnection = (CotpConnection*) GLOBAL_CALLOC(1, sizeof(CotpConnection));
+
+        self->handleSet = Handleset_new();
     }
 
     return self;
@@ -660,6 +663,30 @@ IsoClientConnection_handleConnection(IsoClientConnection self)
 }
 
 
+/**
+ * called by waitForData function
+ *
+ * \return value indicates whether data has been received or the timeout has expired
+ */
+LIB61850_INTERNAL bool
+IsoClientConnection_waitForData(IsoClientConnection self, uint32_t timeoutInMs)
+{
+    /* Blocking wait for incoming data */
+    int result = Handleset_waitReady(self->handleSet, timeoutInMs);
+
+    if (result > 0)
+    {
+        return true;
+    }
+    else if (result < 0)
+    {
+        /* Socket error handling... */
+    }
+
+    return false;
+}
+
+
 bool
 IsoClientConnection_associateAsync(IsoClientConnection self, uint32_t connectTimeoutInMs, uint32_t readTimeoutInMs)
 {
@@ -668,6 +695,7 @@ IsoClientConnection_associateAsync(IsoClientConnection self, uint32_t connectTim
     /* Create socket and start connect */
 
     self->socket = TcpSocket_create();
+    Handleset_addSocket(self->handleSet, self->socket);
 
     if (self->socket == NULL) {
         Semaphore_post(self->tickMutex);
@@ -696,9 +724,9 @@ IsoClientConnection_associateAsync(IsoClientConnection self, uint32_t connectTim
     if (self->parameters->localIpAddress) {
         Socket_bind(self->socket, self->parameters->localIpAddress, self->parameters->localTcpPort);
     }
-    
+
     if (Socket_connectAsync(self->socket, self->parameters->hostname, self->parameters->tcpPort) == false) {
-        
+
         Socket_destroy(self->socket);
         self->socket = NULL;
 
@@ -709,9 +737,9 @@ IsoClientConnection_associateAsync(IsoClientConnection self, uint32_t connectTim
 
         success = false;
     }
-    
+
     Semaphore_post(self->tickMutex);
-    
+
     return success;
 }
 
@@ -790,6 +818,8 @@ IsoClientConnection_destroy(IsoClientConnection self)
 
         IsoClientConnection_close(self);
     }
+
+    Handleset_destroy(self->handleSet);
 
     releaseSocket(self);
 

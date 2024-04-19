@@ -1457,7 +1457,8 @@ connectionHandlingThread(void* parameter)
 
     while (self->connectionThreadRunning) {
         if (MmsConnection_tick(self))
-            Thread_sleep(10);
+            MmsConnection_waitForData(self, 10);
+            // Thread_sleep(10);
     }
 
     return NULL;
@@ -1818,6 +1819,12 @@ MmsConnection_tick(MmsConnection self)
     return IsoClientConnection_handleConnection(self->isoClient);
 }
 
+bool
+MmsConnection_waitForData(MmsConnection self, int timeoutInMs)
+{
+    return IsoClientConnection_waitForData(self->isoClient, timeoutInMs);
+}
+
 void
 MmsConnection_close(MmsConnection self)
 {
@@ -1867,7 +1874,7 @@ MmsConnection_abort(MmsConnection self, MmsError* mmsError)
         }
 
     }
-    
+
     if (success == false) {
         IsoClientConnection_close(self->isoClient);
         *mmsError = MMS_ERROR_SERVICE_TIMEOUT;

@@ -69,6 +69,14 @@ IsoClientConnection_associateAsync(IsoClientConnection self, uint32_t connectTim
 LIB61850_INTERNAL bool
 IsoClientConnection_handleConnection(IsoClientConnection self);
 
+/**
+ * called by waitForData function
+ *
+ * \return value indicates whether data has been received or the timeout has expired
+ */
+LIB61850_INTERNAL bool
+IsoClientConnection_waitForData(IsoClientConnection self, uint32_t timeoutInMs);
+
 LIB61850_INTERNAL void
 IsoClientConnection_associate(IsoClientConnection self, uint32_t connectTimeoutInMs);
 
